@@ -1,21 +1,38 @@
 const gulp = require('gulp')
-const sass = require('gulp-sass')(require('sass'))
-const cleanCss = require('gulp-clean-css')
-const sourcemaps = require('gulp-sourcemaps')
 
+// css
+const cleanCss = require('gulp-clean-css')
+const postcss = require('gulp-postcss')
+const sourcemaps = require('gulp-sourcemaps')
+const concat = require('gulp-concat')
+
+// browser refresh
 const browserSync = require('browser-sync').create()
 
+// images
 const imagemin = require('gulp-imagemin')
 
+// github
 const ghpages = require('gh-pages')
 
 
-gulp.task('sass', function() {
-  	// place code for your default task here
-  	// we want to run "sass css/app.scss app.css --watch"
-	  return gulp.src('src/css/app.scss')
+gulp.task('css', function() {
+	  return gulp.src([
+		 'src/css/reset.css',
+		 'src/css/typography.css',
+		 'src/css/app.css'
+	  ])
 	  	.pipe(sourcemaps.init())
-	  	.pipe(sass())
+		.pipe(
+			postcss([
+				require('autoprefixer'),
+				require('postcss-preset-env')({
+					stage: 1,
+					browsers: ['IE 11', 'last 2 versions']
+				})
+			])
+		)
+		.pipe(concat('app.css'))
 		.pipe(
 			cleanCss({
 				compatibility: 'ie8'
@@ -53,7 +70,7 @@ gulp.task('watch', function () {
 	})
 	
 	gulp.watch('src/*.html', ['html']).on('change', browserSync.reload)
-	gulp.watch('src/css/app.scss', ['sass'])
+	gulp.watch('src/css/*', ['css'])
 	gulp.watch('src/fonts/*', ['fonts'])
 	gulp.watch('src/img/*', ['images'])
 })
@@ -62,4 +79,4 @@ gulp.task('deploy', function () {
 	ghpages.publish('dist')
 })
 
-gulp.task('default', ['html', 'sass', 'fonts', 'images', 'watch'])
+gulp.task('default', ['html', 'css', 'fonts', 'images', 'watch'])
